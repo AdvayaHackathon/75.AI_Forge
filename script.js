@@ -17,11 +17,11 @@ const SAFE_PERSON_KEY = 'aiMentalHealthSafePerson';
 
 // Configuration for negative emotion detection
 const NEGATIVE_EMOTIONS = ['sadness', 'anger', 'fear', 'anxiety', 'negative'];
-const CONSECUTIVE_NEGATIVE_THRESHOLD = 3; // Alert after this many consecutive negative entries
-const TIMESPAN_NEGATIVE_THRESHOLD = 5; // Check if majority of entries in last N entries are negative
-const NEGATIVE_MAJORITY_THRESHOLD = 0.6; // 60% or more are negative to trigger alert
+const CONSECUTIVE_NEGATIVE_THRESHOLD = 3;
+const TIMESPAN_NEGATIVE_THRESHOLD = 5;
+const NEGATIVE_MAJORITY_THRESHOLD = 0.6;
 
-// --- Text Classifier Initialization ---
+// Text Classifier Initialization
 const createTextClassifier = async () => {
     analysisOutput.innerText = "Loading analysis model...";
     try {
@@ -30,21 +30,19 @@ const createTextClassifier = async () => {
             baseOptions: {
                 modelAssetPath: `https://storage.googleapis.com/mediapipe-models/text_classifier/bert_classifier/float32/1/bert_classifier.tflite`
             },
-            maxResults: 5 // Keep top 5 results if model provides more
+            maxResults: 5
         });
         analysisOutput.innerText = "Model loaded. Ready to analyze entries.";
         console.log("Text classifier loaded.");
-        // Load history once the classifier is ready
         loadAndDisplayHistory();
     } catch (error) {
         console.error("Failed to load text classifier:", error);
         analysisOutput.innerText = "Error loading analysis model. Analysis disabled.";
-        // Still load history even if classifier fails
         loadAndDisplayHistory();
     }
 };
 
-// --- Local Storage Functions ---
+// Local Storage Functions
 function getJournalEntries() {
     const entriesJson = localStorage.getItem(JOURNAL_STORAGE_KEY);
     return entriesJson ? JSON.parse(entriesJson) : [];
@@ -66,16 +64,15 @@ function saveSafePerson(name, email) {
     localStorage.setItem(SAFE_PERSON_KEY, JSON.stringify(safePerson));
 }
 
-// --- Display Functions ---
+// Display Functions
 function displayHistory(entries) {
-    journalHistoryDiv.innerHTML = ''; // Clear previous history
+    journalHistoryDiv.innerHTML = '';
 
     if (entries.length === 0) {
         journalHistoryDiv.innerHTML = '<p>No journal entries yet. Write your first one!</p>';
         return;
     }
 
-    // Sort entries by date, newest first
     entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     entries.forEach(entry => {
@@ -93,7 +90,6 @@ function displayHistory(entries) {
                 const categoryName = topCategory.categoryName.toLowerCase();
                 analysisHtml = `Sentiment: ${topCategory.categoryName} (Score: ${topCategory.score.toFixed(2)})`;
                 
-                // Add emotion class for styling
                 if (NEGATIVE_EMOTIONS.some(emotion => categoryName.includes(emotion))) {
                     emotionClass = 'negative-emotion';
                 } else if (categoryName.includes('positive') || categoryName.includes('joy') || 
@@ -120,16 +116,13 @@ function displayHistory(entries) {
 function loadAndDisplayHistory() {
     const entries = getJournalEntries();
     displayHistory(entries);
-    
-    // Check for negative emotion patterns after loading history
     checkNegativePatterns(entries);
 }
 
-// --- Safe Person Setup Functions ---
+// Safe Person Setup
 function setupSafePersonUI() {
     const safePerson = getSafePerson();
     
-    // Create SafePerson section if it doesn't exist
     let safePersonSection = document.getElementById('safe-person-section');
     if (!safePersonSection) {
         safePersonSection = document.createElement('section');
@@ -138,18 +131,16 @@ function setupSafePersonUI() {
             <h2>Safety Contact</h2>
             <p>Set up a trusted contact who can be notified if your mood tracking shows concerning patterns.</p>
             <div class="safe-person-form">
-                <label class="mdc-text-field mdc-text-field--filled">
-                    <span class="mdc-text-field__ripple"></span>
+                <div class="mdc-text-field mdc-text-field--filled" id="name-field">
                     <input id="safe-person-name" class="mdc-text-field__input" type="text" 
                            placeholder="Contact Name" value="${safePerson?.name || ''}">
-                    <span class="mdc-line-ripple"></span>
-                </label><br>
-                <label class="mdc-text-field mdc-text-field--filled">
-                    <span class="mdc-text-field__ripple"></span>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field mdc-text-field--filled" id="email-field">
                     <input id="safe-person-email" class="mdc-text-field__input" type="email" 
                            placeholder="Contact Email" value="${safePerson?.email || ''}">
-                    <span class="mdc-line-ripple"></span>
-                </label><br>
+                    <div class="mdc-line-ripple"></div>
+                </div>
                 <button id="save-safe-person" class="mdc-button mdc-button--raised">
                     <span class="mdc-button__label">SAVE CONTACT</span>
                 </button>
@@ -157,15 +148,11 @@ function setupSafePersonUI() {
             </div>
         `;
         
-        // Insert after entry section
-        const historySectionElement = document.getElementById('history-section');
-        historySectionElement.parentNode.insertBefore(safePersonSection, historySectionElement);
+        entrySection.insertAdjacentElement('afterend', safePersonSection);
         
-        // Initialize new Material Design Components
-        new MDCTextField(document.querySelector("#safe-person-section .mdc-text-field:nth-child(1)"));
-        new MDCTextField(document.querySelector("#safe-person-section .mdc-text-field:nth-child(3)"));
+        new MDCTextField(document.getElementById('name-field'));
+        new MDCTextField(document.getElementById('email-field'));
         
-        // Add event listener for save button
         document.getElementById('save-safe-person').addEventListener('click', () => {
             const name = document.getElementById('safe-person-name').value.trim();
             const email = document.getElementById('safe-person-email').value.trim();
@@ -184,7 +171,7 @@ function setupSafePersonUI() {
     }
 }
 
-// --- Negative Emotion Pattern Detection ---
+// Negative Emotion Detection
 function isNegativeEmotion(entry) {
     if (!entry.analysis || !entry.analysis.classifications?.[0]?.categories?.[0]) {
         return false;
@@ -195,12 +182,10 @@ function isNegativeEmotion(entry) {
 }
 
 function checkNegativePatterns(entries) {
-    if (entries.length < 2) return; // Need at least 2 entries to detect patterns
+    if (entries.length < 2) return;
     
-    // Sort by date (oldest first for sequential analysis)
     const sortedEntries = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
     
-    // Check for consecutive negative entries
     let consecutiveNegativeCount = 0;
     let maxConsecutiveNegative = 0;
     
@@ -213,12 +198,10 @@ function checkNegativePatterns(entries) {
         }
     }
     
-    // Check percentage of negative emotions in recent entries
     const recentEntries = sortedEntries.slice(-TIMESPAN_NEGATIVE_THRESHOLD);
     const negativeCount = recentEntries.filter(isNegativeEmotion).length;
     const negativePercentage = recentEntries.length > 0 ? negativeCount / recentEntries.length : 0;
     
-    // Determine if we should alert
     const shouldAlert = 
         maxConsecutiveNegative >= CONSECUTIVE_NEGATIVE_THRESHOLD || 
         (recentEntries.length >= 3 && negativePercentage >= NEGATIVE_MAJORITY_THRESHOLD);
@@ -229,20 +212,17 @@ function checkNegativePatterns(entries) {
 }
 
 function showNegativePatternAlert(consecutiveCount, percentage) {
-    // Create alert if it doesn't exist
     let alertElement = document.getElementById('negative-pattern-alert');
     if (!alertElement) {
         alertElement = document.createElement('div');
         alertElement.id = 'negative-pattern-alert';
         alertElement.classList.add('alert-box');
-        
         document.body.insertBefore(alertElement, document.body.firstChild);
     }
     
     const safePerson = getSafePerson();
     const hasSafePerson = safePerson && safePerson.email;
     
-    // Different message based on whether they have a SafePerson set up
     let contactMessage = '';
     if (hasSafePerson) {
         contactMessage = `
@@ -253,7 +233,7 @@ function showNegativePatternAlert(consecutiveCount, percentage) {
         `;
     } else {
         contactMessage = `
-            <p>Consider setting up a safety contact in the settings below who can be notified when you're feeling low.</p>
+            <p>Consider setting up a safety contact who can be notified when you're feeling low.</p>
         `;
     }
     
@@ -266,7 +246,6 @@ function showNegativePatternAlert(consecutiveCount, percentage) {
         </button>
     `;
     
-    // Add event listeners for buttons
     document.getElementById('dismiss-alert').addEventListener('click', () => {
         alertElement.remove();
     });
@@ -280,19 +259,14 @@ function showNegativePatternAlert(consecutiveCount, percentage) {
 }
 
 function contactSafePerson(safePerson) {
-    // Prepare email content
     const subject = "Mental Health Check-In Request";
     const body = "Hello, I've been tracking my mood in my journal app, and it has detected a pattern that suggests I might need some support. Could we connect soon? This message was sent through my mental health journal app.";
-    
-    // Open email client with mailto link
     const mailtoLink = `mailto:${safePerson.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailtoLink);
-    
-    // Show confirmation
     alert(`Opening your email client to contact ${safePerson.name}. Thank you for reaching out.`);
 }
 
-// --- Event Listener for Submit ---
+// Event Listener for Submit
 submit.addEventListener("click", async () => {
     const entryText = input.value.trim();
     if (entryText === "") {
@@ -300,68 +274,40 @@ submit.addEventListener("click", async () => {
         return;
     }
 
-    if (!textClassifier) {
-        alert("Analysis model is not ready yet. Please wait or try reloading.");
-         // Save entry without analysis if model failed to load
-         const newEntry = {
-            date: new Date().toISOString(),
-            text: entryText,
-            analysis: null // Indicate analysis wasn't performed
-         };
-         saveJournalEntry(newEntry);
-         loadAndDisplayHistory(); // Update history display
-         input.value = ''; // Clear input field
-        return;
-    }
+    const newEntry = {
+        date: new Date().toISOString(),
+        text: entryText,
+        analysis: null
+    };
 
-    analysisOutput.innerText = "Analyzing...";
-    await sleep(50); // Small delay for UI update
-
-    try {
-        const result = textClassifier.classify(entryText);
-        console.log("Classification Result:", result);
-
-        const newEntry = {
-            date: new Date().toISOString(),
-            text: entryText,
-            analysis: result // Store the full analysis result
-        };
-
-        saveJournalEntry(newEntry);
-        
-        // Display immediate feedback
-        const topCategory = result.classifications?.[0]?.categories?.[0];
-        if (topCategory) {
-            analysisOutput.innerText = `Entry saved. Detected Sentiment: ${topCategory.categoryName} (${topCategory.score.toFixed(2)})`;
-        } else {
-            analysisOutput.innerText = "Entry saved. Sentiment analysis unclear.";
+    if (textClassifier) {
+        analysisOutput.innerText = "Analyzing...";
+        try {
+            const result = await textClassifier.classify(entryText);
+            newEntry.analysis = result;
+            
+            const topCategory = result.classifications?.[0]?.categories?.[0];
+            analysisOutput.innerText = topCategory 
+                ? `Entry saved. Detected Sentiment: ${topCategory.categoryName} (${topCategory.score.toFixed(2)})`
+                : "Entry saved. Sentiment analysis unclear.";
+        } catch (error) {
+            console.error("Error during classification:", error);
+            analysisOutput.innerText = "Error analyzing entry. Entry saved without analysis.";
         }
-
-        input.value = ''; // Clear input field
-        
-        // Reload history and check patterns with the new entry included
-        loadAndDisplayHistory();
-
-    } catch (error) {
-        console.error("Error during classification:", error);
-        analysisOutput.innerText = "Error analyzing entry. Entry saved without analysis.";
-         // Save entry without analysis if classification fails
-         const newEntry = {
-            date: new Date().toISOString(),
-            text: entryText,
-            analysis: null // Indicate analysis wasn't performed
-         };
-         saveJournalEntry(newEntry);
-         loadAndDisplayHistory(); // Update history display
-         input.value = ''; // Clear input field
+    } else {
+        analysisOutput.innerText = "Model not loaded. Entry saved without analysis.";
     }
+
+    saveJournalEntry(newEntry);
+    input.value = '';
+    loadAndDisplayHistory();
 });
 
-// --- Utility Functions ---
+// Utility Functions
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// --- Initial Load ---
-createTextClassifier(); // Start loading the model immediately
-setupSafePersonUI(); // Set up SafePerson UI section
+// Initial Load
+createTextClassifier();
+setupSafePersonUI();

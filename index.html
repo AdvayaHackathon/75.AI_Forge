@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>AI Mental Health Journal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./style.css">
   <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 </head>
 <body>
 
@@ -32,7 +31,12 @@
 <!-- SafePerson section will be inserted here by JavaScript -->
 
 <section id="history-section">
-    <h2>My Journal History</h2>
+    <div class="history-header">
+        <h2>My Journal History</h2>
+        <button id="clear-history" class="mdc-button mdc-button--raised delete-button">
+            <span class="mdc-button__label">CLEAR ALL HISTORY</span>
+        </button>
+    </div>
     <div id="journal-history">
         <p>Loading history...</p>
     </div>

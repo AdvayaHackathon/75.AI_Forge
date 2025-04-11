@@ -2,20 +2,20 @@ body {
   font-family: roboto, sans-serif;
   margin: 2em;
   color: #3d3d3d;
-  --mdc-theme-primary: #007f8b; /* Teal color */
-  --mdc-theme-on-primary: #ffffff; /* White text on primary */
+  --mdc-theme-primary: #007f8b;
+  --mdc-theme-on-primary: #ffffff;
   line-height: 1.6;
 }
 
 h1 {
-  color: #005f6b; /* Darker Teal */
+  color: #005f6b;
   text-align: center;
   margin-bottom: 1em;
 }
 
 h2 {
   clear: both;
-  color: #007f8b; /* Teal */
+  color: #007f8b;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.3em;
   margin-top: 1.5em;
@@ -24,7 +24,7 @@ h2 {
 button {
   min-width: 200px;
   height: 50px;
-  margin-top: 10px; /* Added margin */
+  margin-top: 10px;
 }
 
 section {
@@ -38,9 +38,9 @@ section {
 }
 
 #input {
-  height: 150px; /* Increased height */
-  width: 95%; /* Responsive width */
-  --mdc-theme-primary: #12b5cb; /* Lighter teal for input focus */
+  height: 150px;
+  width: 95%;
+  --mdc-theme-primary: #12b5cb;
   --mdc-theme-on-primary: #f1f3f4;
 }
 
@@ -50,45 +50,41 @@ section {
   color: #555;
 }
 
-.invisible { /* Keep if needed, though might not be used now */
-  opacity: 0.2;
-}
-
 #submit {
   margin-top: 20px;
-  display: block; /* Center button */
+  display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* --- Styles for History Section --- */
+/* History Section */
 #history-section {
-    background-color: #ffffff; /* White background for history */
+    background-color: #ffffff;
 }
 
 #journal-history {
     margin-top: 1em;
-    max-height: 500px; /* Limit height and allow scrolling */
-    overflow-y: auto; /* Add scrollbar if content exceeds max-height */
-    padding-right: 10px; /* Space for scrollbar */
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
 .journal-entry {
     margin-bottom: 1.5em;
     padding-bottom: 1em;
-    border-bottom: 1px dashed #ccc; /* Separator */
+    border-bottom: 1px dashed #ccc;
 }
 
 .journal-entry:last-child {
-    border-bottom: none; /* No border for the last entry */
+    border-bottom: none;
 }
 
 .journal-entry p {
-    margin: 0.5em 0; /* Space between paragraphs within an entry */
+    margin: 0.5em 0;
 }
 
 .journal-entry strong {
-    color: #005f6b; /* Darker teal for labels */
+    color: #005f6b;
 }
 
 hr {
@@ -97,34 +93,46 @@ hr {
     margin-top: 1em;
 }
 
-/* --- Emotion Styling --- */
+/* Emotion Styling */
 .negative-emotion {
-    color: #e53935; /* Red for negative emotions */
+    color: #e53935 !important;
     font-weight: bold;
 }
 
 .positive-emotion {
-    color: #43a047; /* Green for positive emotions */
+    color: #43a047 !important;
 }
 
 .neutral-emotion {
-    color: #757575; /* Gray for neutral emotions */
+    color: #757575 !important;
 }
 
-/* --- SafePerson Section Styling --- */
+/* SafePerson Section */
 #safe-person-section {
     background-color: #f5f5f5;
     border-left: 4px solid #12b5cb;
+    margin: 20px 0;
+    padding: 20px;
 }
 
 #safe-person-section .mdc-text-field {
-    width: 95%;
-    margin-bottom: 10px;
+    width: 100%;
+    margin: 10px 0;
 }
 
-/* --- Alert Box Styling --- */
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+    background-color: #f5f5f5 !important;
+}
+
+/* Alert Box */
 .alert-box {
-    position: relative;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 600px;
     padding: 1em;
     margin: 1em 0;
     background-color: #fff3cd;
@@ -157,16 +165,16 @@ hr {
 
 @keyframes slidein {
     from {
-        transform: translateY(-20px);
+        transform: translateY(-20px) translateX(-50%);
         opacity: 0;
     }
     to {
-        transform: translateY(0);
+        transform: translateY(0) translateX(-50%);
         opacity: 1;
     }
 }
 
-/* Add responsive design adjustments if needed */
+/* Responsive Design */
 @media (max-width: 600px) {
   body {
     margin: 1em;
