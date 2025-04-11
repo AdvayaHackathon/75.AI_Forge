@@ -1,5 +1,3 @@
-@use "@material"; /* If you have Sass configured, otherwise ignore */
-
 body {
   font-family: roboto, sans-serif;
   margin: 2em;
