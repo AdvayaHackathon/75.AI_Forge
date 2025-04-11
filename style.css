@@ -62,6 +62,13 @@ section {
     background-color: #ffffff;
 }
 
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 #journal-history {
     margin-top: 1em;
     max-height: 500px;
@@ -95,16 +102,34 @@ hr {
 
 /* Emotion Styling */
 .negative-emotion {
-    color: #e53935 !important;
+    color: #e53935;
     font-weight: bold;
 }
 
 .positive-emotion {
-    color: #43a047 !important;
+    color: #43a047;
 }
 
 .neutral-emotion {
-    color: #757575 !important;
+    color: #757575;
+}
+
+/* Emoji styling */
+.journal-entry [class$="-emotion"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Delete Button */
+.delete-button {
+    --mdc-theme-primary: #e53935;
+    --mdc-theme-on-primary: #ffffff;
+    margin-left: 15px;
+}
+
+.delete-button:hover {
+    background-color: #c62828 !important;
 }
 
 /* SafePerson Section */
@@ -191,5 +216,13 @@ hr {
   .alert-box button {
     width: 100%;
     margin-bottom: 10px;
+  }
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .delete-button {
+    margin-left: 0;
+    margin-top: 10px;
   }
 }

@@ -10,6 +10,7 @@ const analysisOutput = document.getElementById("analysis-output");
 const submit = document.getElementById("submit");
 const journalHistoryDiv = document.getElementById("journal-history");
 const entrySection = document.getElementById("entry-section");
+const clearHistoryBtn = document.getElementById("clear-history");
 
 let textClassifier;
 const JOURNAL_STORAGE_KEY = 'aiMentalHealthJournalEntries';
@@ -21,39 +22,7 @@ const CONSECUTIVE_NEGATIVE_THRESHOLD = 3;
 const TIMESPAN_NEGATIVE_THRESHOLD = 5;
 const NEGATIVE_MAJORITY_THRESHOLD = 0.6;
 
-// Text Classifier Initialization
-const createTextClassifier = async () => {
-    analysisOutput.innerText = "Loading analysis model...";
-    try {
-        const text = await FilesetResolver.forTextTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-text@0.10.0/wasm");
-        textClassifier = await TextClassifier.createFromOptions(text, {
-            baseOptions: {
-                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/text_classifier/bert_classifier/float32/1/bert_classifier.tflite`
-            },
-            maxResults: 5
-        });
-        analysisOutput.innerText = "Model loaded. Ready to analyze entries.";
-        console.log("Text classifier loaded.");
-        loadAndDisplayHistory();
-    } catch (error) {
-        console.error("Failed to load text classifier:", error);
-        analysisOutput.innerText = "Error loading analysis model. Analysis disabled.";
-        loadAndDisplayHistory();
-    }
-};
-
-// Local Storage Functions
-function getJournalEntries() {
-    const entriesJson = localStorage.getItem(JOURNAL_STORAGE_KEY);
-    return entriesJson ? JSON.parse(entriesJson) : [];
-}
-
-function saveJournalEntry(entry) {
-    const entries = getJournalEntries();
-    entries.push(entry);
-    localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(entries));
-}
-
+// ========== SAFE PERSON FUNCTIONS ========== //
 function getSafePerson() {
     const safePersonJson = localStorage.getItem(SAFE_PERSON_KEY);
     return safePersonJson ? JSON.parse(safePersonJson) : null;
@@ -64,62 +33,6 @@ function saveSafePerson(name, email) {
     localStorage.setItem(SAFE_PERSON_KEY, JSON.stringify(safePerson));
 }
 
-// Display Functions
-function displayHistory(entries) {
-    journalHistoryDiv.innerHTML = '';
-
-    if (entries.length === 0) {
-        journalHistoryDiv.innerHTML = '<p>No journal entries yet. Write your first one!</p>';
-        return;
-    }
-
-    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    entries.forEach(entry => {
-        const entryDiv = document.createElement('div');
-        entryDiv.classList.add('journal-entry');
-
-        const date = new Date(entry.date).toLocaleString();
-
-        let analysisHtml = 'Analysis: Not available';
-        let emotionClass = '';
-        
-        if (entry.analysis) {
-            const topCategory = entry.analysis.classifications?.[0]?.categories?.[0];
-            if (topCategory) {
-                const categoryName = topCategory.categoryName.toLowerCase();
-                analysisHtml = `Sentiment: ${topCategory.categoryName} (Score: ${topCategory.score.toFixed(2)})`;
-                
-                if (NEGATIVE_EMOTIONS.some(emotion => categoryName.includes(emotion))) {
-                    emotionClass = 'negative-emotion';
-                } else if (categoryName.includes('positive') || categoryName.includes('joy') || 
-                           categoryName.includes('happy') || categoryName.includes('excitement')) {
-                    emotionClass = 'positive-emotion';
-                } else {
-                    emotionClass = 'neutral-emotion';
-                }
-            } else {
-                analysisHtml = `Sentiment: Could not determine`;
-            }
-        }
-
-        entryDiv.innerHTML = `
-            <p><strong>Date:</strong> ${date}</p>
-            <p><strong>Entry:</strong> ${entry.text.replace(/\n/g, '<br>')}</p>
-            <p class="${emotionClass}"><strong>${analysisHtml}</strong></p>
-            <hr>
-        `;
-        journalHistoryDiv.appendChild(entryDiv);
-    });
-}
-
-function loadAndDisplayHistory() {
-    const entries = getJournalEntries();
-    displayHistory(entries);
-    checkNegativePatterns(entries);
-}
-
-// Safe Person Setup
 function setupSafePersonUI() {
     const safePerson = getSafePerson();
     
@@ -171,7 +84,81 @@ function setupSafePersonUI() {
     }
 }
 
-// Negative Emotion Detection
+// ========== JOURNAL ENTRY FUNCTIONS ========== //
+function getJournalEntries() {
+    const entriesJson = localStorage.getItem(JOURNAL_STORAGE_KEY);
+    return entriesJson ? JSON.parse(entriesJson) : [];
+}
+
+function saveJournalEntry(entry) {
+    const entries = getJournalEntries();
+    entries.push(entry);
+    localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(entries));
+}
+
+function clearJournalHistory() {
+    localStorage.removeItem(JOURNAL_STORAGE_KEY);
+    loadAndDisplayHistory();
+}
+
+function displayHistory(entries) {
+    journalHistoryDiv.innerHTML = '';
+
+    if (entries.length === 0) {
+        journalHistoryDiv.innerHTML = '<p>No journal entries yet. Write your first one!</p>';
+        return;
+    }
+
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    entries.forEach(entry => {
+        const entryDiv = document.createElement('div');
+        entryDiv.classList.add('journal-entry');
+
+        const date = new Date(entry.date).toLocaleString();
+
+        let analysisHtml = 'Analysis: Not available 🧐';
+        let emotionClass = '';
+        let emoji = '';
+        
+        if (entry.analysis) {
+            const topCategory = entry.analysis.classifications?.[0]?.categories?.[0];
+            if (topCategory) {
+                const categoryName = topCategory.categoryName.toLowerCase();
+                const score = topCategory.score.toFixed(2);
+                
+                if (NEGATIVE_EMOTIONS.some(emotion => categoryName.includes(emotion))) {
+                    emotionClass = 'negative-emotion';
+                    emoji = '😞';
+                } else if (categoryName.includes('positive')) {
+                    emotionClass = 'positive-emotion';
+                    emoji = '😊';
+                } else {
+                    emotionClass = 'neutral-emotion';
+                    emoji = '😐';
+                }
+                
+                analysisHtml = `Sentiment: ${topCategory.categoryName} ${emoji} (${score})`;
+            }
+        }
+
+        entryDiv.innerHTML = `
+            <p><strong>Date:</strong> ${date}</p>
+            <p><strong>Entry:</strong> ${entry.text.replace(/\n/g, '<br>')}</p>
+            <p class="${emotionClass}"><strong>${analysisHtml}</strong></p>
+            <hr>
+        `;
+        journalHistoryDiv.appendChild(entryDiv);
+    });
+}
+
+function loadAndDisplayHistory() {
+    const entries = getJournalEntries();
+    displayHistory(entries);
+    checkNegativePatterns(entries);
+}
+
+// ========== ANALYSIS FUNCTIONS ========== //
 function isNegativeEmotion(entry) {
     if (!entry.analysis || !entry.analysis.classifications?.[0]?.categories?.[0]) {
         return false;
@@ -266,7 +253,28 @@ function contactSafePerson(safePerson) {
     alert(`Opening your email client to contact ${safePerson.name}. Thank you for reaching out.`);
 }
 
-// Event Listener for Submit
+// ========== TEXT CLASSIFIER ========== //
+const createTextClassifier = async () => {
+    analysisOutput.innerText = "Loading analysis model...";
+    try {
+        const text = await FilesetResolver.forTextTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-text@0.10.0/wasm");
+        textClassifier = await TextClassifier.createFromOptions(text, {
+            baseOptions: {
+                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/text_classifier/bert_classifier/float32/1/bert_classifier.tflite`
+            },
+            maxResults: 5
+        });
+        analysisOutput.innerText = "Model loaded. Ready to analyze entries.";
+        console.log("Text classifier loaded.");
+        loadAndDisplayHistory();
+    } catch (error) {
+        console.error("Failed to load text classifier:", error);
+        analysisOutput.innerText = "Error loading analysis model. Analysis disabled.";
+        loadAndDisplayHistory();
+    }
+};
+
+// ========== EVENT LISTENERS ========== //
 submit.addEventListener("click", async () => {
     const entryText = input.value.trim();
     if (entryText === "") {
@@ -288,7 +296,7 @@ submit.addEventListener("click", async () => {
             
             const topCategory = result.classifications?.[0]?.categories?.[0];
             analysisOutput.innerText = topCategory 
-                ? `Entry saved. Detected Sentiment: ${topCategory.categoryName} (${topCategory.score.toFixed(2)})`
+                ? `Entry saved. Detected Sentiment: ${topCategory.categoryName} ${getEmoji(topCategory.categoryName.toLowerCase())} (${topCategory.score.toFixed(2)})`
                 : "Entry saved. Sentiment analysis unclear.";
         } catch (error) {
             console.error("Error during classification:", error);
@@ -303,11 +311,19 @@ submit.addEventListener("click", async () => {
     loadAndDisplayHistory();
 });
 
-// Utility Functions
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+clearHistoryBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to delete ALL journal entries? This cannot be undone!")) {
+        clearJournalHistory();
+    }
+});
+
+// ========== HELPER FUNCTIONS ========== //
+function getEmoji(categoryName) {
+    if (NEGATIVE_EMOTIONS.some(emotion => categoryName.includes(emotion))) return '😞';
+    if (categoryName.includes('positive')) return '😊';
+    return '😐';
 }
 
-// Initial Load
+// ========== INITIALIZATION ========== //
 createTextClassifier();
 setupSafePersonUI();
